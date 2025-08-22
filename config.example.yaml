@@ -1,0 +1,65 @@
+# Medical Center Platform Migration Configuration
+# Copy this file to config.yaml and update with your actual values
+
+# Database Connection URLs
+# Format: mysql+pymysql://username:password@host:port/database_name
+old_db_url: "mysql+pymysql://user:pass@localhost:3306/old_moh"
+new_db_url: "mysql+pymysql://user:pass@localhost:3306/new_moh"
+
+# Alternative connection formats:
+# MySQL over socket: mysql+pymysql://user:pass@/database_name?unix_socket=/var/run/mysqld/mysqld.sock
+# PostgreSQL: postgresql://user:pass@localhost:5432/database_name
+# Docker: mysql+pymysql://user:pass@host.docker.internal:3306/database_name
+
+# Migration Settings
+batch_size: 5000                    # Number of records to process per batch
+max_workers: 4                      # Maximum concurrent workers for parallel processing
+retry_attempts: 3                   # Number of retry attempts for failed operations
+retry_delay_seconds: 5             # Delay between retry attempts
+
+# Performance Settings
+disable_fk_checks: true            # Disable foreign key checks during migration (recommended)
+bulk_insert_size: 1000            # Number of records to insert in bulk operations
+connection_pool_size: 10           # Database connection pool size
+connection_pool_timeout: 30        # Connection pool timeout in seconds
+
+# Data Processing Settings
+phone_normalization: true          # Normalize phone numbers to E.164 format
+email_validation: true             # Validate email addresses during migration
+data_cleaning: true                # Clean and normalize data (trim whitespace, fix casing)
+preserve_audit_fields: true        # Preserve created_at, updated_at, deleted_at fields
+
+# Safety Settings
+backup_before_migration: true      # Create backup before starting migration
+validate_after_migration: true     # Run validation checks after migration
+rollback_on_failure: true          # Attempt rollback if migration fails
+log_pii: false                     # Log personally identifiable information (set to false for production)
+
+# Reporting Settings
+generate_crosswalks: true          # Generate crosswalk CSV files
+generate_validation_report: true   # Generate validation report
+generate_schema_diff: true         # Generate schema difference report
+log_level: "INFO"                  # Logging level: DEBUG, INFO, WARNING, ERROR
+
+# Feature Flags
+enable_parallel_processing: true   # Enable parallel processing for large datasets
+enable_incremental_migration: false # Enable incremental migration (resume from checkpoint)
+enable_data_verification: true     # Enable data verification during migration
+
+# Custom SQL Settings
+pre_migration_sql: []              # SQL statements to run before migration
+post_migration_sql: []             # SQL statements to run after migration
+custom_validation_queries: []      # Custom validation queries
+
+# Example custom SQL:
+# pre_migration_sql:
+#   - "SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'"
+#   - "SET SESSION innodb_lock_wait_timeout = 120"
+
+# post_migration_sql:
+#   - "ANALYZE TABLE users"
+#   - "ANALYZE TABLE patients"
+
+# custom_validation_queries:
+#   - "SELECT COUNT(*) FROM users WHERE email IS NULL"
+#   - "SELECT COUNT(*) FROM patients WHERE phone_number IS NULL"

@@ -1,0 +1,12 @@
+# Minimal requirements for Medical Center Platform Migration Tool
+# Install only these packages for basic functionality
+
+# Database drivers and ORM
+PyMySQL>=1.1.0              # MySQL driver for Python
+SQLAlchemy>=2.0.0            # Database toolkit and ORM
+
+# Configuration and data formats
+PyYAML>=6.0                  # YAML configuration file parsing
+
+# Core Python libraries (usually included with Python)
+# csv, json, logging, os, sys, time, uuid, datetime, pathlib, typing

@@ -1,0 +1,279 @@
+# Medical Center Platform Migration Mapping Configuration
+# Copy this file to mapping.yaml and update with your actual mappings
+
+# Role Classification
+# Define which user types are considered staff vs patients
+roles_staff:
+  - "DOCTOR"
+  - "ADMIN"
+  - "SECRETARY"
+  - "NURSE"
+  - "SUPER_ADMIN"
+
+roles_patients:
+  - "PATIENT"
+
+# Role Aliases and Normalization
+# Map legacy role names to standardized ones
+role_aliases:
+  "dr": "DOCTOR"
+  "doctor": "DOCTOR"
+  "administrator": "ADMIN"
+  "admin": "ADMIN"
+  "secretary": "SECRETARY"
+  "nurse": "NURSE"
+  "patient": "PATIENT"
+  "super_admin": "SUPER_ADMIN"
+
+# Gender Mapping
+# Normalize gender values to standard format
+genders:
+  "male": "MALE"
+  "female": "FEMALE"
+  "m": "MALE"
+  "f": "FEMALE"
+  "M": "MALE"
+  "F": "FEMALE"
+  "Male": "MALE"
+  "Female": "FEMALE"
+
+# Status Value Mappings
+# Map legacy status values to new standardized ones
+statuses:
+  # Appointment statuses
+  "booked": "BOOKED"
+  "completed": "COMPLETED"
+  "did_not_come": "DID_NOT_COME"
+  "cancelled": "CANCELLED"
+  
+  # Visit statuses
+  "wait_list": "WAIT_LIST"
+  "in_progress": "IN_PROGRESS"
+  "done": "DONE"
+  "transferred": "TRANSFERRED"
+  "waiting_list_transferred": "WAITING_LIST_TRANSFERRED"
+  "called": "CALLED"
+  
+  # Medical case statuses
+  "active": "ACTIVE"
+  "closed": "CLOSED"
+  "pending": "PENDING"
+
+# Phone Number Normalization
+# Define phone number format rules
+phone_normalization:
+  default_country_code: "+963"  # Syria country code
+  remove_spaces: true
+  remove_dashes: true
+  remove_parentheses: true
+  add_country_code_if_missing: true
+  validate_format: true
+
+# Email Normalization
+# Define email validation and cleaning rules
+email_normalization:
+  convert_to_lowercase: true
+  trim_whitespace: true
+  validate_format: true
+  remove_duplicates: true
+
+# Data Cleaning Rules
+# Define how to clean and normalize data fields
+data_cleaning:
+  names:
+    trim_whitespace: true
+    title_case: true
+    remove_extra_spaces: true
+  
+  addresses:
+    trim_whitespace: true
+    standardize_abbreviations: true
+    validate_format: false
+  
+  dates:
+    standardize_format: "YYYY-MM-DD"
+    handle_invalid_dates: "set_null"
+    timezone_handling: "preserve_original"
+
+# Field Mappings
+# Define how fields map between old and new schemas
+field_mappings:
+  users:
+    # Direct field mappings (old -> new)
+    direct:
+      "id": "id"
+      "first_name": "first_name"
+      "last_name": "last_name"
+      "father_name": "father_name"
+      "mother_name": "mother_name"
+      "email": "email"
+      "password": "password"
+      "phone_number": "phone_number"
+      "gender": "gender"
+      "date_of_birth": "date_of_birth"
+      "avatar_file_url": "avatar_file_url"
+      "created_at": "created_at"
+      "updated_at": "updated_at"
+      "type": "type"
+      "deleted_at": "deleted_at"
+    
+    # Fields that need transformation
+    transform:
+      "phone_number": "normalize_phone"
+      "email": "normalize_email"
+      "gender": "normalize_gender"
+      "type": "normalize_role"
+  
+  patients:
+    # Fields that map from old users table to new patients table
+    direct:
+      "first_name": "first_name"
+      "last_name": "last_name"
+      "father_name": "father_name"
+      "mother_name": "mother_name"
+      "phone_number": "phone_number"
+      "gender": "gender"
+      "date_of_birth": "date_of_birth"
+      "avatar_file_url": "avatar_file_url"
+      "created_at": "created_at"
+      "updated_at": "updated_at"
+      "deleted_at": "deleted_at"
+    
+    # New fields in patients table (set defaults)
+    defaults:
+      "patient_id": "generate_uuid"
+      "contact_info": null
+      "medical_number": "0"
+      "marital_status": null
+      "nationality": null
+      "blood_type": null
+      "tobacco_use": null
+      "illicit_drug_use": null
+      "alcohol_use": null
+      "living_situation": null
+      "national_id": null
+      "country_id": null
+      "governorate_id": null
+      "easy_appointment_customer_id": null
+      "years_of_smoking": null
+      "smoking_start_year": null
+      "cigarettes_per_day": null
+      "average_packs_per_day": null
+      "occupation": null
+      "qr_code": null
+      "relation_patient_id": null
+      "relation_ship_type": null
+
+# Foreign Key Rewiring Rules
+# Define how to rewire foreign keys during migration
+foreign_key_rules:
+  # Tables that reference users (need to determine if staff or patient)
+  user_references:
+    - table: "appointments"
+      columns:
+        - name: "patient_id"
+          target_table: "patients"
+          crosswalk: "user_to_patient"
+        - name: "doctor_id"
+          target_table: "users"
+          crosswalk: "user_to_user"
+        - name: "created_by_user_id"
+          target_table: "users"
+          crosswalk: "user_to_user"
+    
+    - table: "visits"
+      columns:
+        - name: "patient_id"
+          target_table: "patients"
+          crosswalk: "user_to_patient"
+        - name: "doctor_id"
+          target_table: "users"
+          crosswalk: "user_to_user"
+        - name: "relation_patient_id"
+          target_table: "patients"
+          crosswalk: "user_to_patient"
+    
+    - table: "medical_cases"
+      columns:
+        - name: "patient_id"
+          target_table: "patients"
+          crosswalk: "user_to_patient"
+        - name: "created_by"
+          target_table: "users"
+          crosswalk: "user_to_user"
+    
+    - table: "verification_codes"
+      columns:
+        - name: "patient_id"
+          target_table: "patients"
+          crosswalk: "user_to_patient"
+    
+    - table: "patient_allergies"
+      columns:
+        - name: "patient_id"
+          target_table: "patients"
+          crosswalk: "user_to_patient"
+    
+    - table: "patient_health_records"
+      columns:
+        - name: "patient_id"
+          target_table: "patients"
+          crosswalk: "user_to_patient"
+        - name: "doctor_id"
+          target_table: "users"
+          crosswalk: "user_to_user"
+    
+    - table: "vaccine_patients"
+      columns:
+        - name: "patient_id"
+          target_table: "patients"
+          crosswalk: "user_to_patient"
+
+# Data Validation Rules
+# Define validation rules for data quality
+validation_rules:
+  required_fields:
+    users:
+      - "first_name"
+      - "last_name"
+      - "type"
+    
+    patients:
+      - "first_name"
+      - "last_name"
+  
+  unique_constraints:
+    users:
+      - ["email"]
+      - ["phone_number"]
+    
+    patients:
+      - ["phone_number"]
+      - ["national_id"]
+  
+  format_validation:
+    email: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    phone: "^\\+?[1-9]\\d{1,14}$"
+    date: "^\\d{4}-\\d{2}-\\d{2}$"
+
+# Error Handling
+# Define how to handle various error conditions
+error_handling:
+  duplicate_emails: "log_and_continue"  # Options: log_and_continue, skip, merge
+  duplicate_phones: "log_and_continue"
+  invalid_emails: "set_null"
+  invalid_phones: "set_null"
+  missing_required_fields: "skip"
+  foreign_key_violations: "log_and_continue"
+
+# Logging Configuration
+# Define what information to log during migration
+logging:
+  log_pii: false                    # Log personally identifiable information
+  log_passwords: false              # Log password hashes
+  log_sql: false                    # Log SQL statements
+  log_performance: true             # Log performance metrics
+  log_errors: true                  # Log all errors
+  log_warnings: true                # Log warnings
+  log_info: true                    # Log informational messages
+  log_debug: false                  # Log debug information
